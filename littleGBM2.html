@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little GBM 2.0!</title>
+    <link rel="stylesheet" href="littleGBM2.css">
+</head>
+<body>
+    <div id="head">
+        <h1 class="typing-text glow-text" id="text">
+            
+            <span class="cursor" id="cursor">|</span>
+        </h1>
+    </div>
+    <div class="content">
+      <div id="infobox">
+        <h1> LittleGBM</h1>
+        <h2> How (we hope) this works:</h2>
+          This is a Gradient Boosting Machine. It's a learning model which works on making a first prediction, and then working to minimize the residual errors when being trained - boosting the 'gradient' or differences created by each feature's values. It is best suited for instances where decisions are to be made, and the output is boolean. This particular one accepts csv (comma separated values) data to train on, and makes a tree. And when asked to predict,(again, in the form of csv data), generates predictions which are boolean value. The expected training data may look like:
+          <br><br>
+          Feature1,Feature2,Truth <br>
+          25,18,0 <br>
+          25,22,0 <br>
+          24,23,0 <br>
+          23,35,1 <br>
+          28,38,0 <br>
+          30,39,1 <br>
+          31,29,1 <br>
+          36,40,1 <br>
+          <br>
+          Note that the truth values (the boolean values which constitute the expected output) must be entered as the last column in the csv data. Also note that the feature data accepted must be numerical. (Entries such as "low" "medium" and "high" can be split into numbers like 1,2,3 before entering.) 
+          <br><br>
+          <hr style="background-color:white;">
+          
+          <blockquote style="text-align:right">
+            Roses are red. <br> Violets are blue. <br> We don't code. <br> Good night. <br><br>
+            <cite>&nbsp; &nbsp; &nbsp; &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;- Team NahiAata.js</cite>
+          </blockquote>
+          </div>
+          <br>
+          <hr id="hr1">
+          <br>
+      <div id="title1">
+        <div style="text-align: center">
+        <h1> The Training Zone </h1>
+        <br>
+        </div>
+        <hr>
+        <p>
+          So here's a bit of lore. When you're training a model here, we give you free control of 2 parameters: the <em>Learning Factor</em> of the model, and the <em>Depth</em> to which you wish to train the model. <br><br>
+          The learning factor represents how quickly the model learns from its previous residuals or mistakes. It has an ideal value typically varying between 0.001 to 0.1 . (note however that due to constraints on stack size here, ideally to produce tangible results, pick a value between 0.01 and 0.1.) For assistance, <b>we have set it to 0.1 by default</b>.<br><br>
+          The iteration, on the other hand is how much you wish to train the model - learn from past mistakes 10 times, 100 times, 1000 times etc. The value for this usually varies with the type of data. (Again, due to constraints on stack size, the maximum depth we can support under good conditions is 3000.)
+          For assistance, <b>we have set it by default to 100.</b>
+          <br><br>
+          The predictions that this model yields are <b>risk scores</b>. What risk score here means is that - with respect to the training data, the prediction measures how likely the outcome is to being 'True' (1) or 'False' (0). <br><br>
+          Note however that a prediction of '0' or '1' are unique. The model can't commit with certainty on the truthiness of the datapoint. A prediction of 1 implies that the  score is very close to 1. Likewise, a prediction of 0 means that the score is very close to 0. 
+        </p>
+        <hr>
+        <br><br>
+        <div id="data-handling">
+          <label for="input-handler" style="color: white;">Attach your CSV file here:&nbsp;&nbsp;</label>
+          <input type = "file" accept=".csv" id="input-handler" onchange="toggleInputs()">
+          <br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>OR</b> 
+          <br>
+          <br>
+          <label for="text-input" style="color: white;">Type CSV style data for training here (including prediction):</label><br><br>
+          <textarea id="text-input" style="border:none; border-radius: 25px; height: 400px; width: 600px; padding: 20px; font-size: 12pt" oninput="toggleInputs()"></textarea>
+          <br><br>
+          <label for="lrnf">Learning Factor: </label>
+          <input type="number" id="lrnf"> &nbsp;&nbsp;
+          <label for="depth">Iteration: </label>
+          <input type="number" id="depth">
+          <br><br>
+          <button id="input-submit-button">Submit</button>&nbsp;&nbsp;
+          <button id="reset-data-button"> Reset Training</button>
+          
+        </div>
+      </div>
+
+      <hr id="hr2"> 
+
+      <div id="title2">
+        <div style="text-align: center">
+        <h1> The Prediction Zone </h1>
+        <br>
+        </div>
+        <hr>
+        <br><br>
+        <div id="prediciton-handling">
+        
+          <label for="prediction-input" style="color: white;">Type CSV style data for predicition here (including headers):</label><br><br>
+          <textarea id="prediction-input"></textarea>
+          <br><br>
+          <div id="prediction-output"></div>
+          <br><br>
+          <button id="predict-submit-button">Submit</button> &nbsp;&nbsp;
+          <button id="reset-output-button"> Reset Output</button>
+        </div>
+      </div>
+      
+    </div>
+
+    <script src = "littleGBM2.js"></script>
+    
+    <script>
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const textContainer = document.getElementById("text");
+    const cursor = document.getElementById("cursor");
+    const content = document.querySelector(".content");
+
+    const fullText = "We  Tired.";
+    const correctedText = "We  Tried.";
+
+    let index = 0;
+    let deleting = false;
+    let deletingIndex = fullText.length ; // Start deleting from the last letter of "tired"
+    let typingIndex = deletingIndex; // Start typing from where deletion stops
+
+    function updateCursor() {
+        textContainer.appendChild(cursor);  // Always move cursor after text
+    }
+
+    function typeEffect() {
+      cursor.classList.add("no-blink"); // Stop blinking during typing
+        if (!deleting) {
+            // Typing phase: Display "We tired"
+            if (index < fullText.length) {
+                let span = document.createElement("span");
+                span.textContent = fullText[index];
+                span.style.opacity = "0";
+                textContainer.insertBefore(span, cursor);
+
+                // Apply glow effect dynamically
+                setTimeout(() => {
+                    span.style.opacity = "1";
+                    span.style.animation = "letter-glow 0.6s ease-in-out forwards";
+                }, 50);
+
+                index++;
+                setTimeout(typeEffect, 300); // Adjust typing speed
+            } else {
+                // Start deleting after a short pause
+                setTimeout(() => {
+                    deleting = true;
+                    typeEffect();
+                }, 300);
+            }
+        } else {
+            // Deleting phase: Remove "d e r i"
+            if (deletingIndex > 3) {  // Stop at "We t"
+                let spans = textContainer.getElementsByTagName("span");
+                spans[deletingIndex].remove(); // Remove last character in deletion order
+                deletingIndex--;
+                typingIndex--;
+                updateCursor(); // Keep cursor at the end
+                setTimeout(typeEffect, 200);
+            } else {
+                // Start retyping corrected letters after deletion
+                cursor.classList.remove("no-blink"); 
+                setTimeout(() => {
+                    retypeEffect();
+                    cursor.classList.add("no-blink");
+                }, 1000);
+                
+            }
+        }
+    }
+    typingIndex++;
+    function retypeEffect() {
+        if (typingIndex < correctedText.length) {
+            let span = document.createElement("span");
+            span.textContent = correctedText[typingIndex];
+            span.style.opacity = "0";
+            textContainer.insertBefore(span, cursor); // Keep cursor at the end
+
+            // Apply glow effect dynamically and keep it
+            setTimeout(() => {
+                span.style.opacity = "1";
+                span.style.animation = "letter-glow 0.6s ease-in-out forwards";
+                span.classList.add("glowing");  // Keep the glow effect
+            }, 50);
+
+            typingIndex++;
+            setTimeout(retypeEffect, 200);
+        } else {
+            // Cursor blinks for 2 seconds, then fades out
+            cursor.classList.remove("no-blink"); 
+            setTimeout(() => {  
+              cursor.style.animation = "cursor-fade 0s forwards";
+            }, 2400);
+
+            // Show content after typing finishes
+            setTimeout(() => {
+                content.style.opacity = "1";
+                content.style.transform = "translateY(0)";
+            }, 2500);
+        }
+    }
+
+    // Start typing after a short delay
+    setTimeout(typeEffect, 1000);
+});
+
+    </script>
+  </body>
+</html>
