@@ -1,7 +1,7 @@
 // Global variables removed
 let gmaxTP;
 let gminTP;
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Predefined utility functions
 const range = (n) => Array.from({ length: n }, (_, i) => i);
 const msort = (mdata, feature) => mdata.sort((a, b) => a[feature] - b[feature]);
@@ -13,7 +13,7 @@ const frss = (arr) => {
 const avg = (arr) => arr.reduce((sum, num) => sum + num, 0) / arr.length;
 const minVal = (arr) => arr.reduce((min, num) => Math.min(min, num), Infinity);
 const maxVal = (arr) => arr.reduce((max, num) => Math.max(max, num), -Infinity);
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Function to convert CSV data into an array of objects
 const modifier = (strg) => {
     const data = strg.split("\n").map(row => row.split(",").map(value => isNaN(value) ? value : Number(value)));
@@ -27,7 +27,7 @@ const modifier = (strg) => {
         return cleanedItem;
     });
 };
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Example dataset
 let a = `Age,Gender,Hospitalizations,Family History,Substance Abuse,Social Support,Stress Factor,Medication Adherence,Diagnosis
 72,1,0,0,0,0,2,2,0
@@ -40,7 +40,7 @@ let a = `Age,Gender,Hospitalizations,Family History,Substance Abuse,Social Suppo
 44,0,1,1,0,1,0,2,1
 76,0,0,0,1,0,2,2,0
 36,1,10,0,1,2,0,1,1`;
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Function to determine best splitting parameter
 const fgain = (mdata) => {
     let best_split_data = [0, "Hello World", 0, 0];
@@ -58,14 +58,14 @@ const fgain = (mdata) => {
     }
     return best_split_data;
 };
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Function to initialize first-step predictions
 const first_step = (mdata) => {
     let out = mdata.map(row => row[Object.keys(mdata[0])[Object.keys(mdata[0]).length - 1]]);
     let pred1 = avg(out);
     return mdata.map(row => ({ ...row, [Object.keys(mdata[0])[Object.keys(mdata[0]).length - 1]]: pred1 }));
 };
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Recursive function to train the model
 const track = (pred, mdata, lrnf, depth, tree = []) => {
     if (depth <= 0) return { pred, tree };
@@ -95,7 +95,7 @@ const track = (pred, mdata, lrnf, depth, tree = []) => {
 
     return track(pred, mdata, lrnf, depth - 1, tree);
 };
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Example training execution
 let depth = 1000;
 scrib.show("Running 1000 iterations...");
@@ -103,7 +103,7 @@ let p1 = modifier(a);
 let { pred, tree } = track(first_step(p1), p1, 0.1, depth);
 scrib.show("Training Completed");
 scrib.show(pred);
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Function to make predictions
 const predict = (input, mdata, tree) => {
     let data = modifier(input);
@@ -127,11 +127,11 @@ const predict = (input, mdata, tree) => {
     // Remove the temporary originalIndex key
     return predictions.map(({ originalIndex, ...rest }) => rest);
 };
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Example prediction execution
 scrib.show("Running Predictions...");
 scrib.show(predict(a, p1, tree));
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 //Baranwal believes in Karma.
 //Aaditya does too.
 //So does Swara.
