@@ -3,6 +3,7 @@
 //-------------------------------------------------------------------------------------
 // Global variables.
 let initGainSum, trainMax, trainMin, mem_itn;
+let valid=true;
 let gtree = []
 //-------------------------------------------------------------------------------------
 // Predefined utility functions
@@ -23,7 +24,16 @@ const modifier = (strg) => {
         .split("\n")
         .filter(row => row.trim() !== "") // Ignore empty lines
         .map(row => row.split(",").map(value => isNaN(value) ? value : Number(value)));
-
+        
+        if(data[0].length < data[1].length && valid) {
+            valid=false;
+            alert("Error: Insufficient headers");
+        }
+        else if (data[0].length>data[1].length && valid) {
+            valid=false;
+            alert("Error: Excess Headers");
+        };  
+    try{let keys = data[0].map(key => key.trim());} catch(error){alert("Error: Headers missing / purely numerical")}
     let keys = data[0].map(key => key.trim());
     let mdata = data.slice(1).map(row => Object.fromEntries(keys.map((key, i) => [key, row[i]])));
 
@@ -73,7 +83,7 @@ const track = (pred, mdata, lrnf= 0.1, itn=100, tree = []) => {
  	let gain_sum = splits.reduce((acc, curr)=> acc + curr[3],0);
   	console.log(gain_sum);
   	if (mem_itn === itn) initGainSum = gain_sum;
-  	if (gain_sum <= 0.2*initGainSum){
+  	if (gain_sum <= 0.2*initGainSum && valid){
 		alert(`Training didn't require ${mem_itn} iterations. Ran ${mem_itn - itn} times.`);
 	  	let out = pred.map(row => row[Object.keys(mdata[0])[Object.keys(mdata[0]).length - 1]]);
         trainMax = maxVal(out);
@@ -159,6 +169,7 @@ function toggleInputs() {
 }
 
 document.querySelector('#input-submit-button').addEventListener('click', ()=>{
+    valid=true;
     const csvText = document.getElementById("text-input");
     const csvFile = document.getElementById("input-handler");
     lrnf=document.querySelector('#lrnf').value || 0.1;
@@ -167,8 +178,7 @@ document.querySelector('#input-submit-button').addEventListener('click', ()=>{
     if (csvFile.disabled){
         let {pred, tree} = track(first_step(modifier(csvText.value)), modifier(csvText.value), lrnf, itn)
         gtree=tree;
-        console.log(pred);
-        if (tree.length > 0) alert("Decision tree formed successfully!");
+        if (tree.length > 0 && valid) alert("Decision tree formed successfully!");
     } else {
         const file = csvFile.files[0];
         if (!file) {
@@ -181,8 +191,7 @@ document.querySelector('#input-submit-button').addEventListener('click', ()=>{
             const csvData = e.target.result;
             let {pred, tree} = track(first_step(modifier(csvData)), modifier(csvData), lrnf, itn);
             gtree=tree;
-            console.log(pred);
-        if (tree.length>0) alert("Decision tree formed successfully!");
+        if (tree.length>0 && valid) alert("Decision tree formed successfully!");
         }
 
         reader.readAsText(file)
@@ -190,23 +199,24 @@ document.querySelector('#input-submit-button').addEventListener('click', ()=>{
 })
 
 document.querySelector('#predict-submit-button').addEventListener('click', () => {
-    console.log(gtree);
+    valid=true;
     const csvText = document.getElementById("text-input");
     const csvFile = document.getElementById("input-handler");
     let data;
 
     if (csvFile.disabled) {
         data = predict(document.querySelector('#prediction-input').value, modifier(csvText.value), gtree);
-        
-        const outputDiv = document.getElementById("prediction-output");
-        const headers = Object.keys(data[0]);
-        let tableHTML = "<table border='1'><tr>";
-        tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
-        tableHTML += data.map(row => 
-            "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
-        ).join("");
-        tableHTML += "</table>";
-        outputDiv.innerHTML = tableHTML;
+        if(valid){
+            const outputDiv = document.getElementById("prediction-output");
+            const headers = Object.keys(data[0]);
+            let tableHTML = "<table border='1'><tr>";
+            tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
+            tableHTML += data.map(row => 
+                "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
+            ).join("");
+            tableHTML += "</table>";
+            outputDiv.innerHTML = tableHTML;
+        }
     }
 
     if (!csvFile.disabled) {
@@ -221,15 +231,17 @@ document.querySelector('#predict-submit-button').addEventListener('click', () =>
         reader.onload = function (e) {
             const csvData = e.target.result;
             data = predict(document.querySelector('#prediction-input').value, modifier(csvData), gtree);
-            const outputDiv = document.getElementById("prediction-output");
-            const headers = Object.keys(data[0]);
-            let tableHTML = "<table border='1'><tr>";
-            tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
-            tableHTML += data.map(row => 
-                "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
-            ).join("");
-            tableHTML += "</table>";
-            outputDiv.innerHTML = tableHTML;
+            if (valid){
+                const outputDiv = document.getElementById("prediction-output");
+                const headers = Object.keys(data[0]);
+                let tableHTML = "<table border='1'><tr>";
+                tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
+                tableHTML += data.map(row => 
+                    "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
+                ).join("");
+                tableHTML += "</table>";
+                outputDiv.innerHTML = tableHTML;
+            }
         };
 
         reader.readAsText(file);
@@ -249,9 +261,11 @@ document.getElementById("reset-data-button").addEventListener("click", () => {
     initGainSum=undefined;
     trainMax=-Infinity;
     trainMin=+Infinity;
+    valid = true;
 });
 
 document.getElementById("reset-output-button").addEventListener("click", () => {
     document.getElementById("prediction-input").value = ""; 
     document.getElementById("prediction-output").innerHTML = ""; 
+    valid=true;
 });
