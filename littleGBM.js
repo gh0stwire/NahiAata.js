@@ -1,9 +1,7 @@
 // Global variables removed
 let gmaxTP;
 let gminTP;
-let gtree = []
-let lrnf=0.1;
-let depth=100;
+
 // Predefined utility functions
 const range = (n) => Array.from({ length: n }, (_, i) => i);
 const msort = (mdata, feature) => mdata.sort((a, b) => a[feature] - b[feature]);
@@ -18,20 +16,9 @@ const maxVal = (arr) => arr.reduce((max, num) => Math.max(max, num), -Infinity);
 
 // Function to convert CSV data into an array of objects
 const modifier = (strg) => {
-    const data = strg
-        .split("\n")
-        .map(row => row.split(",").map(value => isNaN(value) ? value.trim() : Number(value)))
-        .filter(row => row.length > 1 && row.some(value => value !== "")); // Removes empty rows
-
-    try {
-        let keys = data[0].map(key => key.trim());
-    } catch (error) {
-        alert("Error: Please enter non-empty data. Also ensure headers are present.");
-    }
-
+    const data = strg.split("\n").map(row => row.split(",").map(value => isNaN(value) ? value : Number(value)));
     let keys = data[0].map(key => key.trim());
     let mdata = data.slice(1).map(row => Object.fromEntries(keys.map((key, i) => [key, row[i]])));
-
     return mdata.map(item => {
         let cleanedItem = {};
         for (let key in item) {
@@ -40,7 +27,6 @@ const modifier = (strg) => {
         return cleanedItem;
     });
 };
-
 
 // Example dataset
 let a = `Age,Gender,Hospitalizations,Family History,Substance Abuse,Social Support,Stress Factor,Medication Adherence,Diagnosis
@@ -110,6 +96,13 @@ const track = (pred, mdata, lrnf, depth, tree = []) => {
     return track(pred, mdata, lrnf, depth - 1, tree);
 };
 
+// Example training execution
+let depth = 1000;
+scrib.show("Running 1000 iterations...");
+let p1 = modifier(a);
+let { pred, tree } = track(first_step(p1), p1, 0.1, depth);
+scrib.show("Training Completed");
+scrib.show(pred);
 
 // Function to make predictions
 const predict = (input, mdata, tree) => {
@@ -125,7 +118,7 @@ const predict = (input, mdata, tree) => {
             row[tree[j][0]] <= tree[j][1] ? pred += tree[j][2] : pred += tree[j][3];
         }
         
-        return { ...row, Prediction: pred.toFixed(2) };
+        return { ...row, Prediction: pred };
     });
 
     // Restore the original order
@@ -135,124 +128,7 @@ const predict = (input, mdata, tree) => {
     return predictions.map(({ originalIndex, ...rest }) => rest);
 };
 
-
-//Arnav believes in Karma.
-//Aaditya does too.
-//So does Swara.
-
-
-function toggleInputs() {
-    const csvText = document.getElementById("text-input");
-    const csvFile = document.getElementById("input-handler");
-
-    if (csvText.value.trim() !== "") {
-        csvFile.disabled = true;
-    } else {
-        csvFile.disabled = false;
-    }
-
-    if (csvFile.files.length > 0) {
-        csvText.disabled = true;
-    } else {
-        csvText.disabled = false;
-    }
-}
-
-document.querySelector('#input-submit-button').addEventListener('click', ()=>{
-    const csvText = document.getElementById("text-input");
-    const csvFile = document.getElementById("input-handler");
-    lrnf=document.querySelector('#lrnf').value;
-    depth=document.querySelector('#depth').value;
-    if (csvFile.disabled){
-        //console.log(modifier(csvText.value));
-        let {pred, tree} = track(first_step(modifier(csvText.value)), modifier(csvText.value), lrnf, depth)
-        gtree=tree;
-        console.log(pred);
-        if (tree.length > 0) alert("Data submitted successfully!");
-    } else {
-        const file = csvFile.files[0];
-        if (!file) {
-            alert("Please select a CSV file.");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const csvData = e.target.result;
-            let {pred, tree} = track(first_step(modifier(csvData)), modifier(csvData), lrnf, depth);
-            gtree=tree;
-            console.log(pred);
-        if (tree.length>0) alert("Data submitted successfully!");
-        }
-
-        reader.readAsText(file)
-    }
-})
-
-document.querySelector('#predict-submit-button').addEventListener('click', () => {
-    console.log(gtree);
-    const csvText = document.getElementById("text-input");
-    const csvFile = document.getElementById("input-handler");
-    let data;
-
-    if (csvFile.disabled) {
-        data = predict(document.querySelector('#prediction-input').value, modifier(csvText.value), gtree);
-        
-        // Table rendering (unchanged)
-        const outputDiv = document.getElementById("prediction-output");
-        const headers = Object.keys(data[0]);
-        let tableHTML = "<table border='1'><tr>";
-        tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
-        tableHTML += data.map(row => 
-            "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
-        ).join("");
-        tableHTML += "</table>";
-        outputDiv.innerHTML = tableHTML;
-    }
-
-    if (!csvFile.disabled) {
-        // Read CSV file and store in 'data'
-        const file = csvFile.files[0];
-        if (!file) {
-            alert("Please select a CSV file.");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const csvData = e.target.result;
-            data = predict(document.querySelector('#prediction-input').value, modifier(csvData), gtree);
-            // Table rendering (unchanged)
-            const outputDiv = document.getElementById("prediction-output");
-            const headers = Object.keys(data[0]);
-            let tableHTML = "<table border='1'><tr>";
-            tableHTML += headers.map(header => `<th>${header}</th>`).join("") + "</tr>";
-            tableHTML += data.map(row => 
-                "<tr>" + headers.map(header => `<td>${row[header]}</td>`).join("") + "</tr>"
-            ).join("");
-            tableHTML += "</table>";
-            outputDiv.innerHTML = tableHTML;
-        };
-
-        reader.readAsText(file);
-    }
-});
-
-document.getElementById("reset-data-button").addEventListener("click", () => {
-    const csvText = document.getElementById("text-input");
-    const csvFile = document.getElementById("input-handler");
-    document.getElementById("input-handler").value = ""; 
-    document.getElementById("text-input").value = ""; 
-    document.querySelector("#lrnf").value="";
-    document.querySelector("#depth").value="";
-    csvFile.disabled=false;
-    csvText.disabled=false;
-    lrnf=0.1;
-    depth=100;
-    gtree=[];
-});
-
-document.getElementById("reset-output-button").addEventListener("click", () => {
-    document.getElementById("prediction-input").value = ""; 
-    document.getElementById("prediction-output").innerHTML = ""; 
-});
+// Example prediction execution
+scrib.show("");
+scrib.show("Running Predictions...");
+scrib.show(predict(a, p1, tree));
