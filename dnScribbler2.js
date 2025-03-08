@@ -134,9 +134,9 @@ const predict = (input, mdata, tree) => {
             }
         }
 
-        let normalizedPred = ((pred - trainMin) / (trainMax - trainMin)).toFixed(3);
-        if (normalizedPred <=0) normalizedPred = 0;
-        if (normalizedPred >=1) normalizedPred = 1;
+        let normalizedPred = pred.toFixed(3);
+        //if (normalizedPred <=0) normalizedPred = 0;
+        //if (normalizedPred >=1) normalizedPred = 1;
         return { ...row, Prediction: normalizedPred };
     });
 
